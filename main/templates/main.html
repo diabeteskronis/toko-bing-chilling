@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bing Chilling Shop</title>
+    <style type="text/css">
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        margin: 40px;
+        font-size: 2.5rem;
+      }
+
+      /* Product list container */
+      .product-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        max-width: 1200px;
+      }
+
+      /* Product card styles */
+      .product-card {
+        background-color: #ffcfe8;
+        border-radius: 10px;
+        padding: 20px;
+        width: 200px;
+        height: 350px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      .product-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      h5 {
+        font-size: 1.2rem;
+        margin: 10px 0 5px;
+        font-weight: bold;
+      }
+
+      p {
+        font-size: 1rem;
+        margin: 5px 0;
+      }
+
+      /* Price and rating styling */
+      .price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .rating {
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Toko Es Krim Bing Chilling</h1>
+
+    <div class="product-list">
+      {% for product in products %}
+      <div class="product-card">
+        <h5>🍦Name</h5>
+        <p>{{product.name}}</p>
+        <h5>Price</h5>
+        <p>{{product.price}} USD</p>
+        <h5>Description</h5>
+        <p>{{product.description}}</p>
+        <h5>Chill Rating</h5>
+        <p>{{product.icecreamrating}}/10</p>
+        <br />
+      </div>
+      {% endfor %}
+    </div>
+  </body>
+</html>
