@@ -1,5 +1,5 @@
 LINK DEPLOYMENT:
-https://andharu-hanif-tokobingchilling.pbp.cs.ui.ac.id/
+http://andharu-hanif-bingchillingshop.pbp.cs.ui.ac.id/
 
 # Langkah Implementasi Checklist:
 
