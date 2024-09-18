@@ -1,0 +1,2 @@
+release: python3 manage.py migrate --noinput
+web: gunicorn toko_bing_chilling.wsgi
