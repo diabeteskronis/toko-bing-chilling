@@ -289,3 +289,10 @@ from main.views import show_main, create_mood_entry, show_xml, show_json, show_x
 Tambahkan juga path kedua fungsi tersebut dalam urlpatterns.
 
 Untuk melihat product sesuai id, dapat diakses melalui url http://localhost:8000/xml/[id] atau http://localhost:8000/json/[id].
+
+## SCREENSHOTS:
+
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
