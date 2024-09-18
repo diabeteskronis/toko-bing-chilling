@@ -75,7 +75,9 @@
   </head>
   <body>
     <h1>Toko Es Krim Bing Chilling</h1>
-
+    {% block content %} {% if not products %}
+    <p>Belum ada ice cream tersedia.</p>
+    {% else %}
     <div class="product-list">
       {% for product in products %}
       <div class="product-card">
@@ -89,7 +91,11 @@
         <p>{{product.icecreamrating}}/10</p>
         <br />
       </div>
-      {% endfor %}
+      {% endfor %} {% endif %}
     </div>
+    <a href="{% url 'main:create_bing_entry' %}">
+      <button>Add Ice Cream</button>
+    </a>
+    {% endblock content %}
   </body>
 </html>
