@@ -3,6 +3,8 @@
 LINK DEPLOYMENT:
 http://andharu-hanif-bingchillingshop.pbp.cs.ui.ac.id/
 
+# TUGAS 2
+
 ## Langkah Implementasi (Tugas 2):
 
 1. Buat direktori lokal untuk proyek django dan inisiasi git di dalam direktori tersebut.
@@ -126,6 +128,8 @@ Saya rasa karena Django termasuk framework fullstack dan juga server-side, kita 
 
 Object Relational Mapping (ORM): Sebuah teknik yang digunakan dalam pemrograman untuk menggunakan basisdata relasional sebagai penyimpanan data dengan bentuk objek.
 Model pada Django disebut ORM karena Django menggunakan teknik ORM untuk menghubungkan antara objek Python dan basis data relasional.
+
+# TUGAS 3
 
 ### Mengapa diperlukan data delivery dalam pengimplementasian sebuah platform
 
@@ -296,3 +300,241 @@ Untuk melihat product sesuai id, dapat diakses melalui url http://localhost:8000
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
+
+# TUGAS 4
+
+### Perbedaan HttpResponseRedirect() dan redirect()
+
+Pada HttpResponseRedirect, argumen pertama hanya bisa url, jadi digunakan jika kita perlu redirect ke URL tertentu dan tidak memerlukan tambahan lainnya. Sedangkan, redirect juga bisa menerima argumen tambahan untuk redirect ke view dan model.
+
+### Cara kerja penghubungan model Product dan User
+
+Pada model Product, ditambahkan variabel
+
+```
+user = models.ForeignKey(User, on_delete=models.CASCADE)
+```
+
+Kode tersebut mengasosiasikan product dengan suatu user.
+Potongan kode ForeignKey(...) menunjukkan bahwa setiap produk terhubung dengan satu pengguna (one-to-many), dan jika pengguna dihapus, semua produk yang terkait juga akan dihapus.
+
+### Bagaimana Django mengingat pengguna yang telah login, serta kegunaan lain dari cookies dan apakah semua cookies aman digunakan
+
+Dengan menggunakan cookies, Django menyimpan sesi login user yang di cookie pada browser user.
+Kegunaan lain cookies include keamanan, autentikasi dan pengelolaan sesi, menyimpan preferensi user. untuk personalization/advertisement pada pengguna, dan analitik aktivitas user.
+
+## Langkah Implementasi (Tugas 4):
+
+1. Membuat Fungsi Login
+
+   Pertama, pada main/views.py, tambahkan import authenticate dan login dari django.contrib.auth. Lalu, tambahkan fungsi login_user untuk mengautentikasi user yang ingin login.
+
+```
+def login_user(request):
+   if request.method == 'POST':
+      form = AuthenticationForm(data=request.POST)
+
+      if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('main:show_main')
+
+   else:
+      form = AuthenticationForm(request)
+   context = {'form': form}
+   return render(request, 'login.html', context)
+```
+
+Pada main/templates, tambahkan berkas HTML baru dengan isi sbb:
+
+```
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Login</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="login">
+  <h1>Login</h1>
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+      <tr>
+        <td></td>
+        <td><input class="btn login_btn" type="submit" value="Login" /></td>
+      </tr>
+    </table>
+  </form>
+
+  {% if messages %}
+  <ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %} Don't have an account yet?
+  <a href="{% url 'main:register' %}">Register Now</a>
+</div>
+
+{% endblock content %}
+```
+
+Keluar dari views.py dan masuk ke main/urls.py, tambahkan import login_user dari main.views, jangan lupa juga untuk tambahkan url login_user tersebut ke urlpatterns.
+
+```
+urlpatterns = [
+   ...
+   path('login/', login_user, name='login'),
+]
+```
+
+2. Membuat fungsi logout
+
+Dalam main/views.py, tambahkan import logout dari django.contrib.auth, lalu tambahkan fungsi logout_user sbb:
+
+```
+def logout_user(request):
+    logout(request)
+    return redirect('main:login')
+```
+
+Pada templates/main.html, tambahkan tombol untuk logout di bawh tombol untuk menambah es krim baru.
+
+```
+...
+<a href="{% url 'main:logout' %}">
+  <button>Logout</button>
+</a>
+...
+```
+
+Seperti biasa, tambahkan fungsi baru tersebut ke main dengan diimport dulu lalu masukkan pathnya ke urlpatterns.
+
+```
+urlpatterns = [
+   ...
+   path('logout/', logout_user, name='logout'),
+]
+```
+
+3. Merestriksi Akses Halaman Main
+
+Pada main/views.py, tambahkan import login_required sbb:
+
+```
+from django.contrib.auth.decorators import login_required
+```
+
+Setelah langkah ini, pada server lokal, seharusnya sekarang user diredirect ke halaman login daripada langsung melihat daftar es krim.
+
+4. Menggunakan Data dari Cookies
+
+Pada main/views.py, tambahkan import:
+
+```
+import datetime
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+```
+
+Lalu, pada fungsi login_user, tambahkan cookie berupa last_login untuk mengetahui kapan terakhir user melakukan login. Pada block if form.is_valid() tambahan kode berikut:
+
+```
+...
+if form.is_valid():
+    user = form.get_user()
+    login(request, user)
+    response = HttpResponseRedirect(reverse("main:show_main"))
+    response.set_cookie('last_login', str(datetime.datetime.now()))
+    return response
+...
+```
+
+Setelah itu, pada context fungsi show_main, tambahkan variabel baru 'last_login' dengan mengambil informasi cookie last_login sbb:
+
+```
+context = {
+        'name': request.user.username,
+        'classroom': classroom,
+        'products': products,
+        'last_login': request.COOKIES['last_login'],
+    }
+```
+
+Pada logout_user, kita ubah juga kodenya menjadi berikut:
+
+```
+def logout_user(request):
+    logout(request)
+    response = HttpResponseRedirect(reverse('main:login'))
+    response.delete_cookie('last_login')
+    return response
+```
+
+response.delete_cookie('last_login') berfungsi untuk menghaups cookie last_login saat pengguna melakukan logout.
+
+Kemudian, buka templates/main.html dan tambahkan kode berikut di bawah tombol logout:
+
+```
+...
+<h5>Sesi terakhir login: {{ last_login }}</h5>
+...
+```
+
+5.  Menghubungkan products dengan user secara unik
+
+Buka main/models.py dan tambahkan import user dari django.contrib.auth.models.
+
+Pada model Product yang sudah ada, tambahkan variabel user dengan isinya:
+
+```
+class MoodEntry(models.Model):
+   user = models.ForeignKey(User, on_delete=models.CASCADE)
+   ...
+```
+
+Penjelasan untuk kode di atas ada pada persoalan pertama tugas ini.
+
+Lalu, buka main/views.py dan ubah kode fungsi create_bing_entry menjadi sbb:
+
+```
+form = IceCreamEntryForm(request.POST or None)
+
+    if form.is_valid() and request.method == "POST":
+        product = form.save(commit=False)
+        product.user = request.user
+        product.save()
+        return redirect('main:show_main')
+
+    context = {'form': form}
+    return render(request, "create_bing_entry.html", context)
+```
+
+Setelah itu, ubah value dari product pada fungsi show_main menjadi berikut:
+
+```
+def show_main(request):
+    mood_entries = MoodEntry.objects.filter(user=request.user)
+    context = {
+         'name': request.user.username,
+         ...
+    }
+```
+
+Hal ini agar objek product/es krim yang ditampilkan terasosiasikan dengan pengguna yang sedang login.
+
+Value 'name' diganti menjadi request.user.username untuk menampilkan data nama sesuai username pengguna yang sedang login.
+
+Simpan semua perubahan dan lakukan makemigrations. Saat membuat migrasi model, akan muncul error (ini harus terjadi), ketik angka 1 dan enter, lakukan ini dua kali (karena promptnya ada 2).
+
+Setelah sukses, lakukan migrate.
+
+Langkah terakhir, tambahkan import baru pada settings.py yaitu import os, dan ganti variabel DEBUG dari berkas settings.py menjadi:
+
+```
+PRODUCTION = os.getenv("PRODUCTION", False)
+DEBUG = not PRODUCTION
+```
