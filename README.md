@@ -547,7 +547,7 @@ Element Selector -> Class Selector -> ID Selector -> Inline CSS
 
 ### Responsive Design
 
-Responsive design pada sebuah aplikasi penting untuk aksesibilitas dari macam-macam device dengan kemungkinan ukuran layar dan behavior yang berbeda. Contoh yang sudah menerapkan responsive design adalah website GOTO, contoh yang belum responsive adalah
+Responsive design pada sebuah aplikasi penting untuk aksesibilitas dari macam-macam device dengan kemungkinan ukuran layar dan behavior yang berbeda. Contoh yang sudah menerapkan responsive design adalah website GOTO, contoh yang belum responsive adalah Pacil Web Service.
 
 ### Beda Margin, Border, dan Padding
 
