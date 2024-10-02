@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+  {% load static %}
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,7 +21,6 @@
         font-size: 2.5rem;
       }
 
-      /* Product list container */
       .product-list {
         display: flex;
         flex-wrap: wrap;
@@ -29,7 +29,6 @@
         max-width: 1200px;
       }
 
-      /* Product card styles */
       .product-card {
         background-color: #ffcfe8;
         border-radius: 10px;
@@ -50,18 +49,17 @@
         margin-bottom: 20px;
       }
 
-      h5 {
-        font-size: 1.2rem;
-        margin: 10px 0 5px;
+      .product-card h5 {
+        font-size: 1rem;
+        margin: 0px 0 5px;
         font-weight: bold;
       }
 
-      p {
+      .product-card p {
         font-size: 1rem;
         margin: 5px 0;
       }
 
-      /* Price and rating styling */
       .price {
         font-size: 1.5rem;
         font-weight: bold;
@@ -84,10 +82,15 @@
     </style>
   </head>
   <body>
-    <h1>Toko Es Krim Bing Chilling</h1>
+    {% block content %} {% include 'navbar.html' %}
+    <strong><h1>Bing Chilling Creamery</h1></strong>
     <h2>Selamat datang, {{ request.user.username }}!</h2>
-    <h3>Kelas: {{ classroom }}</h3>
-    {% block content %} {% if not products %}
+    {% if not products %}
+    <img
+      src="{% static 'image/gaada.png' %}"
+      alt="Sad face"
+      class="w-32 h-32 mb-4"
+    />
     <p>Belum ada ice cream tersedia.</p>
     {% else %}
     <div class="product-list">
@@ -101,6 +104,12 @@
         <p>{{product.description}}</p>
         <h5>Chill Rating</h5>
         <p>{{product.icecreamrating}}/10</p>
+        <a href="{% url 'main:edit_bing' product.pk %}">
+          <button class="button">Edit</button>
+        </a>
+        <a href="{% url 'main:delete_bing' product.pk %}">
+          <button class="button">Delete</button>
+        </a>
         <br />
       </div>
       {% endfor %} {% endif %}

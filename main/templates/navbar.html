@@ -1,0 +1,16 @@
+{% extends 'base.html' %} {% block content %}
+<nav class="bg-[#62a144] p-4 w-full shadow">
+  <div class="container mx-auto flex justify-between items-center">
+    <!-- Logo or site name -->
+    <div class="text-white font-bold text-xl">Bing Chilling</div>
+    <div>
+      <a
+        href="{% url 'main:logout' %}"
+        class="bg-white text-[#62a144] font-semibold py-2 px-4 rounded hover:bg-[#4e8435]"
+      >
+        Logout
+      </a>
+    </div>
+  </div>
+</nav>
+{% endblock content %}

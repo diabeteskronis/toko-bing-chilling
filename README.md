@@ -271,7 +271,7 @@ def show_<xml/json>(request):
 Setelah membuat fungsi show_xml dan show_json, tambahkan import baru pada main/urls.py:
 
 ```
-from main.views import show_main, create_mood_entry, show_xml, show_json
+from main.views import show_main, create_bing_entry, show_xml, show_json
 ```
 
 Seperti biasa, tambahkan juga path untuk fungsi show_xml dan show_json pada urlpatterns.
@@ -287,7 +287,7 @@ def show_<xml/json>_by_id(request, id):
 Seperti biasa, tambahkan import show_xml_by_id dan show_json_by_id pada urls.py:
 
 ```
-from main.views import show_main, create_mood_entry, show_xml, show_json, show_xml_by_id, show_json_by_id
+from main.views import show_main, create_bing_entry, show_xml, show_json, show_xml_by_id, show_json_by_id
 ```
 
 Tambahkan juga path kedua fungsi tersebut dalam urlpatterns.
@@ -537,4 +537,448 @@ Langkah terakhir, tambahkan import baru pada settings.py yaitu import os, dan ga
 ```
 PRODUCTION = os.getenv("PRODUCTION", False)
 DEBUG = not PRODUCTION
+```
+
+# TUGAS 5
+
+### Prioritas Selector CSS
+
+Element Selector -> Class Selector -> ID Selector -> Inline CSS
+
+### Responsive Design
+
+Responsive design pada sebuah aplikasi penting untuk aksesibilitas dari macam-macam device dengan kemungkinan ukuran layar dan behavior yang berbeda. Contoh yang sudah menerapkan responsive design adalah website GOTO, contoh yang belum responsive adalah
+
+### Beda Margin, Border, dan Padding
+
+Margin: Space disekitar border elemen
+Paddding: Space antara border dan konten elemen
+Border: Bagian pinggir suatu box elemen
+
+### Flex Box dan Grid Layout
+
+Flex box: Dibuat untuk layout one-dimensional, jadi dia berfungsi pada suatu row atau kolom. Flex box penting untuk bentuk layout yang responsif serta align/distribute items dalam suatu container.
+
+Grid layout: Dibuat untuk layout two-dimensional, sehingga item bisa diposisikan pada kolom atau row. Digunakan untuk bentuk layout yang lebih kompleks.
+
+## Langkah Implementasi (Tugas 5):
+
+1. Menambahkan Tailwind ke Aplikasi
+   Pada base.html, tambahkan tag <meta name="viewport"> agar halaman web dapat menyesuaikan ukuran dan perilaku perangkat mobile. Lalu, untuk menyambungkan aplikasi django dengan tailwind, gunakan script content delivery network untuk diletakkan di dalam html template django. Hasil kodenya sbb:
+
+```
+<head>
+{% block meta %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock meta %}
+<script src="https://cdn.tailwindcss.com">
+</script>
+</head>
+```
+
+2. Menambahkan Fitur Edit Product pada Aplikasi
+   Pada main/views.py, buat fungsi baru edit_product sbb:
+
+```
+def edit_bing(request, id):
+    ice_cream = Product.objects.get(pk = id)
+
+    form = IceCreamEntryForm(request.POST or None, instance=ice_cream)
+
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return HttpResponseRedirect(reverse('main:show_main'))
+
+    context = {'form': form}
+    return render(request, "edit_bing.html", context)
+```
+
+Masih di file yang sama, tambahkan juga import berikut:
+from django.shortcuts import .., reverse
+from django.http import .., HttpResponseRedirect
+
+Lalu buat file baru edit_bing.html pada main/templates. Isinya adalah sbb:
+
+```
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<h1>Edit Ice Cream</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+        <tr>
+            <td></td>
+            <td>
+                <input type="submit" value="Edit Ice Cream"/>
+            </td>
+        </tr>
+    </table>
+</form>
+
+{% endblock %}
+```
+
+Seperti biasa, buka main/urls.py dan import edit_bing dari main.views. Tambahkan juga pathnya sbb:
+
+```
+...
+path('edit-mood/<uuid:id>', edit_mood, name='edit_mood'),
+...
+```
+
+Setelah itu, pada main/templates/main.html, tambahkan:
+
+```
+ <a href="{% url 'main:edit_bing' product.pk %}">
+            <button>
+                Edit
+            </button>
+        </a>
+```
+
+pada akhir div untuk product-card untuk menambahkan tombol edit pada setiap card.
+
+3. Menambahan Fitur Hapus Produk dalam Aplikasi
+
+Buat fungsi baru delete_bing pada views.py dengan kode sbb:
+
+```
+def delete_bing(request, id):
+    product = MoodEntry.objects.get(pk = id)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
+```
+
+Jangan lupa juga untuk import fungsinya di urls.py, dan tambahkan urlnya di urlpatterns:
+
+```
+...
+path('delete/<uuid:id>', delete_mood, name='delete_mood'), # sesuaikan dengan nama fungsi yang dibuat
+...
+```
+
+4. Buka main.html dan ubah kodenya menjadi:
+
+```
+<div class="product-card">
+        <h5>🍦Name</h5>
+        <p>{{product.name}}</p>
+        <h5>Price</h5>
+        <p>{{product.price}} USD</p>
+        <h5>Description</h5>
+        <p>{{product.description}}</p>
+        <h5>Chill Rating</h5>
+        <p>{{product.icecreamrating}}/10</p>
+        <a href="{% url 'main:edit_bing' product.pk %}">
+          <button class="button">Edit</button>
+        </a>
+        <a href="{% url 'main:delete_bing' product.pk %}">
+          <button class="button">Delete</button>
+        </a>
+        <br />
+      </div>
+```
+
+5. Menambahkan Navigation Bar pada Aplikasi
+
+Buat navbar.html pada templates, lalu tambahkan kode berikut:
+
+```
+{% extends 'base.html' %} {% block content %}
+<nav class="bg-[#62a144] p-4 w-full shadow">
+  <div class="container mx-auto flex justify-between items-center">
+    <div class="text-white font-bold text-xl">Bing Chilling</div>
+    <div>
+      <a
+        href="{% url 'main:logout' %}"
+        class="bg-white text-[#62a144] font-semibold py-2 px-4 rounded hover:bg-[#4e8435]"
+      >
+        Logout
+      </a>
+    </div>
+  </div>
+</nav>
+{% endblock content %}
+```
+
+Untuk menambahkan navigation bar pada main.html, create_bing_entry, dan edit_bing, gunakan tag include '...' :
+
+```
+{% extends 'base.html' %}
+{% block content %}
+{% include 'navbar.html' %}
+...
+{% endblock content%}
+```
+
+6. Konfigurasi Static FIles pada Aplikasi
+
+Pada settings.py, tambahkan middleware WhiteNoise:
+
+```
+...
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', #Tambahkan tepat di bawah SecurityMiddleware
+    ...
+]
+...
+```
+
+tambahkan juga...
+
+```
+...
+STATIC_URL = '/static/'
+if DEBUG:
+    STATICFILES_DIRS = [
+        BASE_DIR / 'static' # merujuk ke /static root project pada mode development
+    ]
+else:
+    STATIC_ROOT = BASE_DIR / 'static' # merujuk ke /static root project pada mode production
+...
+```
+
+Sekarang, karena sudah menambahkan tailwind, tinggal tambahkan stylingnya ke masing-masing template. Berikut kode-kodenya untuk template-template yang ada:
+
+#### create_bing_entry.html
+
+```
+{% extends 'base.html' %}
+{% block content %}
+{% include 'navbar.html' %}
+
+<h1 class="text-3xl font-bold mb-6 text-center text-green-600">Add New Ice Cream</h1>
+
+<form method="POST" class="max-w-lg mx-auto p-4 bg-white shadow-lg rounded-lg relative">
+  <a href="{% url 'main:show_main' %}" class="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition duration-300" title="Go back">
+    X
+  </a>
+
+  {% csrf_token %}
+  <div class="space-y-4">
+    {{ form.as_p }}
+    <div>
+      <input
+        type="submit"
+        value="Add Ice Cream"
+        class="w-full bg-green-600 text-white rounded-md py-2 border border-black hover:bg-green-700 transition duration-300"
+      />
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+#### edit_bing_entry.html
+{% extends 'base.html' %} {% block content %} {% include 'navbar.html' %}
+
+<h1 class="text-3xl font-bold mb-6 text-center text-green-600">
+  Add New Ice Cream
+</h1>
+
+<form
+  method="POST"
+  class="max-w-lg mx-auto p-4 bg-white shadow-lg rounded-lg relative"
+>
+  <a
+    href="{% url 'main:show_main' %}"
+    class="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition duration-300"
+    title="Go back"
+  >
+    X
+  </a>
+
+  {% csrf_token %}
+  <div class="space-y-4">
+    {{ form.as_p }}
+    <div>
+      <input
+        type="submit"
+        value="Add Ice Cream"
+        class="w-full bg-green-600 text-white rounded-md py-2 border border-black hover:bg-green-700 transition duration-300"
+      />
+    </div>
+  </div>
+</form>
+```
+
+{% endblock %}
+
+#### edit_bing.html
+
+```
+{% extends 'base.html' %} {% block content %} {% include 'navbar.html' %}
+
+<h1 class="text-3xl font-bold mb-6 text-center text-green-600">
+  Add New Ice Cream
+</h1>
+
+<form
+  method="POST"
+  class="max-w-lg mx-auto p-4 bg-white shadow-lg rounded-lg relative"
+>
+  <a
+    href="{% url 'main:show_main' %}"
+    class="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition duration-300"
+    title="Go back"
+  >
+    X
+  </a>
+
+  {% csrf_token %}
+  <div class="space-y-4">
+    {{ form.as_p }}
+    <div>
+      <input
+        type="submit"
+        value="Add Ice Cream"
+        class="w-full bg-green-600 text-white rounded-md py-2 border border-black hover:bg-green-700 transition duration-300"
+      />
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+```
+
+#### main.html
+
+(Untuk main.html, digunakan css stylesheet internal)
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  {% load static %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bing Chilling Shop</title>
+    <style type="text/css">
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        margin: 40px;
+        font-size: 2.5rem;
+      }
+
+      .product-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        max-width: 1200px;
+      }
+
+      .product-card {
+        background-color: #ffcfe8;
+        border-radius: 10px;
+        padding: 20px;
+        width: 200px;
+        height: 350px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      .product-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .product-card h5 {
+        font-size: 1rem;
+        margin: 0px 0 5px;
+        font-weight: bold;
+      }
+
+      .product-card p {
+        font-size: 1rem;
+        margin: 5px 0;
+      }
+
+      .price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .rating {
+        font-size: 1rem;
+      }
+
+      .button {
+        background-color: #62a144;
+        display: inline;
+        cursor: pointer;
+        color: white;
+        border: none;
+        padding: 1px 10px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    {% block content %} {% include 'navbar.html' %}
+    <strong><h1>Bing Chilling Creamery</h1></strong>
+    <h2>Selamat datang, {{ request.user.username }}!</h2>
+    {% if not products %}
+    <img
+      src="{% static 'image/gaada.png' %}"
+      alt="Sad face"
+      class="w-32 h-32 mb-4"
+    />
+    <p>Belum ada ice cream tersedia.</p>
+    {% else %}
+    <div class="product-list">
+      {% for product in products %}
+      <div class="product-card">
+        <h5>🍦Name</h5>
+        <p>{{product.name}}</p>
+        <h5>Price</h5>
+        <p>{{product.price}} USD</p>
+        <h5>Description</h5>
+        <p>{{product.description}}</p>
+        <h5>Chill Rating</h5>
+        <p>{{product.icecreamrating}}/10</p>
+        <a href="{% url 'main:edit_bing' product.pk %}">
+          <button class="button">Edit</button>
+        </a>
+        <a href="{% url 'main:delete_bing' product.pk %}">
+          <button class="button">Delete</button>
+        </a>
+        <br />
+      </div>
+      {% endfor %} {% endif %}
+    </div>
+    <a href="{% url 'main:create_bing_entry' %}">
+      <button class="button">Add Ice Cream</button>
+    </a>
+    <a href="{% url 'main:logout' %}">
+      <button class="button">Logout</button>
+    </a>
+    <h5>Sesi terakhir login: {{ last_login }}</h5>
+    {% endblock content %}
+  </body>
+</html>
 ```
