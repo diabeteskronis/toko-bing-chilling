@@ -21,14 +21,6 @@
         font-size: 2.5rem;
       }
 
-      .product-list {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 30px;
-        max-width: 1200px;
-      }
-
       .product-card {
         background-color: #ffcfe8;
         border-radius: 10px;
@@ -79,13 +71,21 @@
         padding: 1px 10px;
         font-size: 12px;
       }
+
+      .button-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px; 
+        margin-top: 20px;
+      }
     </style>
   </head>
   <body>
     {% block content %} {% include 'navbar.html' %}
     <strong><h1>Bing Chilling Creamery</h1></strong>
     <h2>Selamat datang, {{ request.user.username }}!</h2>
-    {% if not products %}
+    <div id="bing_entry_cards"></div>
+    <!-- {% if not products %}
     <img
       src="{% static 'image/gaada.png' %}"
       alt="Sad face"
@@ -112,15 +112,192 @@
         </a>
         <br />
       </div>
-      {% endfor %} {% endif %}
+      {% endfor %} {% endif %} -->
     </div>
-    <a href="{% url 'main:create_bing_entry' %}">
-      <button class="button">Add Ice Cream</button>
-    </a>
-    <a href="{% url 'main:logout' %}">
-      <button class="button">Logout</button>
-    </a>
+    <div class="button-row">
+      <a href="{% url 'main:create_bing_entry' %}">
+        <button class="button">Add Ice Cream</button>
+      </a>
+      <button
+      class="button"
+      onclick="showModal()"
+      >
+        Add Ice Cream by AJAX
+      </button>
+      <a href="{% url 'main:logout' %}">
+        <button class="button">Logout</button>
+      </a>
+    </div>
+    <div
+      id="addIceCreamModal"
+      class="fixed z-10 inset-0 overflow-y-auto hidden"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div
+          class="bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full"
+        >
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                  Add New Ice Cream
+                </h3>
+                <div class="mt-2">
+                  <form id="addIceCreamForm" method="POST" action="{% url 'main:create_bing_entry' %}">
+                    {% csrf_token %}
+                    <div class="mt-2">
+                      <label for="name" class="block text-sm font-medium text-gray-700">Ice Cream Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                    <div class="mt-2">
+                      <label for="price" class="block text-sm font-medium text-gray-700">Price (USD)</label>
+                      <input
+                        type="number"
+                        name="price"
+                        id="price"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                    <div class="mt-2">
+                      <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                      <textarea
+                        name="description"
+                        id="description"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      ></textarea>
+                    </div>
+                    <div class="mt-2">
+                      <label for="icecreamrating" class="block text-sm font-medium text-gray-700">Chill Rating (1-10)</label>
+                      <input
+                        type="number"
+                        name="icecreamrating"
+                        id="icecreamrating"
+                        min="1"
+                        max="10"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="submit"
+              form="addIceCreamForm"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#62a144] text-base font-medium text-white hover:bg-green-700 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm"
+              onclick="hideModal()"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <h5>Sesi terakhir login: {{ last_login }}</h5>
+    <script>
+      async function getBingEntries(){
+          return fetch("{% url 'main:show_json' %}").then((res) => res.json())
+      }
+
+      async function refreshBingEntries() {
+        document.getElementById("bing_entry_cards").innerHTML = "";
+        document.getElementById("bing_entry_cards").className = "";
+        const bingEntries = await getBingEntries();
+        let htmlString = "";
+        let classNameString = "";
+
+        if (bingEntries.length === 0) {
+            classNameString = "flex flex-col items-center justify-center min-h-[24rem] p-6";
+            htmlString = `
+                <div class="flex flex-col items-center justify-center min-h-[24rem] p-6">
+                    <img src="{% static 'image/gaada.png' %}" alt="Takde produk la" class="w-32 h-32 mb-4"/>
+                    <p class="text-center text-gray-600 mt-4">Belum ada es krim...</p>
+                </div>
+            `;
+        }
+        else {
+            classNameString = "flex flex-wrap justify-center gap-8 max-w-[1200px]"
+            bingEntries.forEach((item) => {
+                const fields = item.fields;
+                htmlString += `
+                <div class="product-card">
+                  <h5>🍦Name</h5>
+                  <p>${fields.name}</p>
+                  <h5>Price</h5>
+                  <p>${fields.price} USD</p>
+                  <h5>Description</h5>
+                  <p>${fields.description}</p>
+                  <h5>Chill Rating</h5>
+                  <p>${fields.icecreamrating}/10</p>
+                  <a href="/edit-bing/${item.pk}">
+                    <button class="button">Edit</button>
+                  </a>
+                  <a href="/delete/${item.pk}">
+                    <button class="button">Delete</button>
+                  </a>
+                  <br />
+                </div>
+                `;
+            });
+        }
+        document.getElementById("bing_entry_cards").className = classNameString;
+        document.getElementById("bing_entry_cards").innerHTML = htmlString;
+      }
+    refreshBingEntries();
+    function showModal() {
+      document.getElementById('addIceCreamModal').classList.remove('hidden');
+      setTimeout(() => {
+        modalContent.classList.remove('opacity-0', 'scale-95');
+        modalContent.classList.add('opacity-100', 'scale-100');
+      }, 50); 
+    }
+
+    function hideModal() {
+      document.getElementById('addIceCreamModal').classList.add('hidden');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 150); 
+    }
+
+    document.getElementById("addIceCreamForm").addEventListener("submit", async function(event) {
+      event.preventDefault(); 
+
+      const response = await fetch("{% url 'main:create_bing_entry' %}", {
+        method: "POST",
+        body: new FormData(document.querySelector('#addIceCreamForm')),
+      });
+
+      if (response.ok) {
+            await refreshBingEntries(); 
+            document.getElementById("addIceCreamForm").reset();
+            hideModal(); 
+        } else {
+            console.error("Gagal menambahkan es krim :()", response.statusText);
+        }
+    })
+    </script>
     {% endblock content %}
   </body>
 </html>

@@ -1,5 +1,5 @@
 from django.urls import path
-from main.views import show_main, create_bing_entry, show_xml, show_json, show_xml_by_id, show_json_by_id, register, login_user, logout_user, edit_bing, delete_bing
+from main.views import show_main, create_bing_entry, show_xml, show_json, show_xml_by_id, show_json_by_id, register, login_user, logout_user, edit_bing, delete_bing, add_bing_entry_ajax
 
 
 
@@ -18,4 +18,6 @@ urlpatterns = [
     path('logout/', logout_user, name='logout'),
     path('edit-bing/<uuid:id>', edit_bing, name='edit_bing'),
     path('delete/<uuid:id>', delete_bing, name='delete_bing'),
+    path('create-bing-entry-ajax', add_bing_entry_ajax, name='add_bing_entry_ajax'),
+
 ]   

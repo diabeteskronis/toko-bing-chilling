@@ -982,3 +982,283 @@ Sekarang, karena sudah menambahkan tailwind, tinggal tambahkan stylingnya ke mas
   </body>
 </html>
 ```
+
+# TUGAS 6
+
+### Manfaat JavaScript dalam Pengembangan Aplikasi Web
+JavaScript memungkinkan interaktivitas dalam halaman web tersebut untuk pengguna, serta pengolahan data asinkronus.
+
+### Guna await Ketika Menggunakan fetch()
+await digunakan untuk menunggug hasil dari operasi fetch tersebut sebelum lanjut ke bagian kode selanjutnya. Jika tidak menggunakan await, kode berikutnya akan dieksekusi sebelum permintaan fetch() selesai sehingga hasil dari fetch() tidak ditangkap dan datanya tidak tersedia.
+
+### Mengapa Perlu Menggunakan Decorator untuk crsf_exempt
+Untuk melindungi dari serangan CSRF dengan memeriksa token CSRF pada setiap permintaan POST. 
+
+### Mengapa Pembersihan Data Input Pengguna Tidak Dilakukan di Frontend Saja?
+Karena di frontend lebih rentan terhadap manipulasi oleh user. Pembersihan data input dilakukan di backend untuk memastikan keamanan.
+
+## Langkah Implementasi Tugas 6
+
+1. Menambahkan Error Message Pada Login
+Berikan conditional tambahan pada form.is_valid() main/views.py:
+```
+...
+if form.is_valid():
+    user = form.get_user()
+    login(request, user)
+    response = HttpResponseRedirect(reverse("main:show_main"))
+    response.set_cookie('last_login', str(datetime.datetime.now()))
+    return response
+else:
+    messages.error(request, "Invalid username or password. Please try again.")
+...
+```
+
+2. Membuat Fungsi untuk Menambah Product dengan AJAX
+Pertama, tambahkan dua import pada views.py
+```
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+```
+
+Lalu buat fungsi tersebut untuk menambahkan product dengan AJAX:
+```
+@csrf_exempt
+@require_POST
+def add_bing_entry_ajax(request):
+    id = request.POST.get("id")
+    name = request.POST.get("name")
+    price = request.POST.get("price")
+    description = request.POST.get("description")
+    icecreamrating = request.POST.get("icecreamrating")
+    user = request.user
+
+    new_bing = Product(
+        id = id, name = name, price = price, description = description, icecreamrating = icecreamrating, user=user)
+    new_bing.save()
+
+    return HttpResponse(b"CREATED", status=201)
+```
+
+Jangan lupa juga dirouting fungsi add_mood_entry_ajax tersebut:
+```
+from main.views import ..., add_mood_entry_ajax
+```
+```
+urlpatterns = [
+    ...
+      path('create-bing-entry-ajax', add_bing_entry_ajax, name='add_bing_entry_ajax'),
+]
+```
+
+
+3. Menambahkan Data Mood Entry dengan fetch() API
+Pada main/views.py hapus kode tersebut:
+```
+  products = Product.objects.filter(user=request.user)
+```
+
+```
+products = products
+```
+
+Pada views.py masih, ubah baris pertama show_json dan show_xml sbb:
+```
+data = Product.objects.filter(user=request.user)
+```
+
+Lalu, pada main.html, hapus block conditional product yang untuk menampilkan products. Dan ganti dengan block
+```
+    <div id="bing_entry_cards"></div>
+```
+
+Tambahkan block script di bawah sebelum endblock: 
+```
+async function getBingEntries(){
+          return fetch("{% url 'main:show_json' %}").then((res) => res.json())
+      }
+```
+
+Tambahkanjuga fungsi baru dengan nama refreshBingEntries:
+```
+async function refreshBingEntries() {
+        document.getElementById("bing_entry_cards").innerHTML = "";
+        document.getElementById("bing_entry_cards").className = "";
+        const bingEntries = await getBingEntries();
+        let htmlString = "";
+        let classNameString = "";
+
+        if (bingEntries.length === 0) {
+            classNameString = "flex flex-col items-center justify-center min-h-[24rem] p-6";
+            htmlString = `
+                <div class="flex flex-col items-center justify-center min-h-[24rem] p-6">
+                    <img src="{% static 'image/gaada.png' %}" alt="Takde produk la" class="w-32 h-32 mb-4"/>
+                    <p class="text-center text-gray-600 mt-4">Belum ada es krim...</p>
+                </div>
+            `;
+        }
+        else {
+            classNameString = "flex flex-wrap justify-center gap-8 max-w-[1200px]"
+            bingEntries.forEach((item) => {
+                const fields = item.fields;
+                htmlString += `
+                <div class="product-card">
+                  <h5>🍦Name</h5>
+                  <p>${fields.name}</p>
+                  <h5>Price</h5>
+                  <p>${fields.price} USD</p>
+                  <h5>Description</h5>
+                  <p>${fields.description}</p>
+                  <h5>Chill Rating</h5>
+                  <p>${fields.icecreamrating}/10</p>
+                  <a href="/edit-bing/${item.pk}">
+                    <button class="button">Edit</button>
+                  </a>
+                  <a href="/delete/${item.pk}">
+                    <button class="button">Delete</button>
+                  </a>
+                  <br />
+                </div>
+                `;
+            });
+        }
+        document.getElementById("bing_entry_cards").className = classNameString;
+        document.getElementById("bing_entry_cards").innerHTML = htmlString;
+    }
+```
+
+3. Membuat Modal Sebagai Form untuk Menambahkan Mood
+
+Kode modalnya sbb(letakkan di bawah div bing_entry_cards):
+```
+<div
+      id="addIceCreamModal"
+      class="fixed z-10 inset-0 overflow-y-auto hidden"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div
+          class="bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full"
+        >
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                  Add New Ice Cream
+                </h3>
+                <div class="mt-2">
+                  <form id="addIceCreamForm" method="POST" action="{% url 'main:create_bing_entry' %}">
+                    {% csrf_token %}
+                    <div class="mt-2">
+                      <label for="name" class="block text-sm font-medium text-gray-700">Ice Cream Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                    <div class="mt-2">
+                      <label for="price" class="block text-sm font-medium text-gray-700">Price (USD)</label>
+                      <input
+                        type="number"
+                        name="price"
+                        id="price"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                    <div class="mt-2">
+                      <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                      <textarea
+                        name="description"
+                        id="description"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      ></textarea>
+                    </div>
+                    <div class="mt-2">
+                      <label for="icecreamrating" class="block text-sm font-medium text-gray-700">Chill Rating (1-10)</label>
+                      <input
+                        type="number"
+                        name="icecreamrating"
+                        id="icecreamrating"
+                        min="1"
+                        max="10"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="submit"
+              form="addIceCreamForm"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#62a144] text-base font-medium text-white hover:bg-green-700 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm"
+              onclick="hideModal()"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+```
+
+Agar bisa menunjukkan dan menghilangkan modal tersebut, tambahkan:
+```
+    function showModal() {
+      document.getElementById('addIceCreamModal').classList.remove('hidden');
+      setTimeout(() => {
+        modalContent.classList.remove('opacity-0', 'scale-95');
+        modalContent.classList.add('opacity-100', 'scale-100');
+      }, 50); 
+    }
+
+    function hideModal() {
+      document.getElementById('addIceCreamModal').classList.add('hidden');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 150); 
+    }
+```
+
+4. Menambahkan Data Mood dengan AJAX
+
+Tambahkan kode berikut (sudah termasuk event listener):
+```
+document.getElementById("addIceCreamForm").addEventListener("submit", async function(event) {
+      event.preventDefault(); 
+
+      const response = await fetch("{% url 'main:create_bing_entry' %}", {
+        method: "POST",
+        body: new FormData(document.querySelector('#addIceCreamForm')),
+      });
+
+      if (response.ok) {
+            await refreshBingEntries(); 
+            document.getElementById("addIceCreamForm").reset();
+            hideModal(); 
+        } else {
+            console.error("Gagal menambahkan es krim :()", response.statusText);
+        }
+    })
+```
+
+
+
